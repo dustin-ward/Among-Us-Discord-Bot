@@ -120,7 +120,11 @@ client.on("message", message => {
                                                     All users in the queue will be assigned the \"queue\" role. \
                                                     When the host is ready, they can ping those users with \"@queue\".` 
                                                 },
-                    { name: "How To Stop Recieving Notifications:", value: "dont"}
+                    { name: "How To Stop Recieving Notifications:", value: "Just remove your reaction, and the queue role \
+                                                                            should be removed from your account. Message an admin \
+                                                                            or a user with adequate permissions to remove the role \
+                                                                            if this feature does'nt work. (Very Likely)" 
+                                                                        }
 
                 )
                 .setTimestamp();
@@ -165,7 +169,25 @@ client.on("message", message => {
         .setThumbnail('attachment://icon.png')
         .addFields(
             { name: config.prefix + "start", value: `Use this command to start a queue.`},
-            { name: config.prefix + "stop", value: "Stop the current queue"}
+            { name: config.prefix + "stop", value: "Stop the current queue"},
+            { name: config.prefix + "about", value: "Description of the bot"}
+        );
+
+        // Send Embed
+        message.channel.send(menu);
+    }
+
+    if(cmd == config.prefix + "about") {
+        // Create Embed
+        let menu = new Discord.MessageEmbed()
+        .setColor("#FF0000")
+        .setTitle("About")
+        .setDescription("A simple bot to help users queue for an Among Us game")
+        .attachFiles(['./static/icon.png'])
+        .setThumbnail('attachment://icon.png')
+        .addFields(
+            { name: "Author:", value: "Dustin Ward"},
+            { name: "Github", value: "https://github.com/dustin-ward/Among-Us-Discord-Bot"}
         );
 
         // Send Embed
