@@ -4,6 +4,9 @@ const config = require("./config.json");
 const client = new Discord.Client();
 
 let queueMsg = null;
+let everyoneMsg = null;
+let roomCode = "";
+let queueAuthor = null;
 // let queueList = [];
 
 // Create queue role in server
@@ -28,6 +31,33 @@ findQueueRole = () => {
         role = createQueueRole(queueMsg.guild);
     }
     return role;
+}
+
+// Create menu embed
+createMenu = () => {
+    let menu = new Discord.MessageEmbed()
+    .setColor("#FF0000")
+    .setTitle("Among Us Queue Started")
+    .setDescription(`${queueAuthor.username} wants to play Among Us!`)
+    .setAuthor(queueAuthor.username, queueAuthor.avatarURL())
+    .attachFiles(['./static/icon.png'])
+    .setThumbnail('attachment://icon.png')
+    .addFields(
+        { name: 'ROOM CODE:', value: (roomCode === "" ? "No code yet :(" : "**" + roomCode + "**") },
+        { name: '\u200B', value: '\u200B' },
+        { name: "How To Join:", value: `Use the ${config.queueEmoji} react button to be added to the queue. \
+                                        All users in the queue will be assigned the \"queue\" role. \
+                                        When the host is ready, they can ping those users with \"@queue\".` 
+                                    },
+        { name: "How To Stop Recieving Notifications:", value: "Just remove your reaction, and the queue role \
+                                                                should be removed from your account. Message an admin \
+                                                                or a user with adequate permissions to remove the role \
+                                                                if this feature does'nt work. (Very Likely)" 
+                                                            }
+
+    )
+    .setTimestamp();
+    return menu;
 }
 
 // On Bot Startup
@@ -106,34 +136,18 @@ client.on("message", message => {
     if(cmd == config.prefix + "start") {
         // Check for queue in progress
         if(queueMsg === null) {
+            queueAuthor = author;
             // Create Embed
-            let menu = new Discord.MessageEmbed()
-                .setColor("#FF0000")
-                .setTitle("Among Us Queue Started")
-                .setDescription(`${author.username} wants to play Among Us!`)
-                .setAuthor(author.username, author.avatarURL())
-                .attachFiles(['./static/icon.png'])
-                .setThumbnail('attachment://icon.png')
-                .addFields(
-                    { name: '\u200B', value: '\u200B' },
-                    { name: "How To Join:", value: `Use the ${config.queueEmoji} react button to be added to the queue. \
-                                                    All users in the queue will be assigned the \"queue\" role. \
-                                                    When the host is ready, they can ping those users with \"@queue\".` 
-                                                },
-                    { name: "How To Stop Recieving Notifications:", value: "Just remove your reaction, and the queue role \
-                                                                            should be removed from your account. Message an admin \
-                                                                            or a user with adequate permissions to remove the role \
-                                                                            if this feature does'nt work. (Very Likely)" 
-                                                                        }
-
-                )
-                .setTimestamp();
+            let menu = createMenu();
 
             // Send Embed, and remember message details
-            message.channel.send(`@everyone`);
+            message.channel.send(`@everyone`).then(evryMsg => {
+                everyoneMsg = evryMsg;
+            });
             message.channel.send(menu).then(menuMsg => {
                 queueMsg = menuMsg;
                 menuMsg.react(config.queueEmoji);
+                menuMsg.pin();
             });
         }
         else {
@@ -155,11 +169,30 @@ client.on("message", message => {
                 console.log(`Removed ${m.user.username} from queue`);
                 m.roles.remove(role);
             });
+            roomCode = "";
+            queueMsg.delete();
+            everyoneMsg.delete();
             queueMsg = null;
+            queueAuthor = null;
             message.channel.send(`**GG: **The current queue has been stopped. Use \`${config.prefix}start\` to start another queue.`);
         }
     }
 
+    // Code command
+    //
+    if(cmd == config.prefix + "code") {
+        if(args[0]) {
+            roomCode = args[0];
+            let menu = createMenu();
+            queueMsg.edit(menu);
+        }
+        else {
+            message.channel.send(`**Cannot Set Room Code:** No room code provided. Use ${config.prefix}help for a description of this command`);
+        }
+    }
+
+    // Help Command
+    //
     if(cmd == config.prefix + "help") {
         // Create Embed
         let menu = new Discord.MessageEmbed()
@@ -170,6 +203,7 @@ client.on("message", message => {
         .addFields(
             { name: config.prefix + "start", value: `Use this command to start a queue.`},
             { name: config.prefix + "stop", value: "Stop the current queue"},
+            { name: config.prefix + "code <code>", value: `Provide the current room code. (Ex. \"${config.prefix}code RMCDEX\")`},
             { name: config.prefix + "about", value: "Description of the bot"}
         );
 
@@ -177,6 +211,8 @@ client.on("message", message => {
         message.channel.send(menu);
     }
 
+    // about command
+    //
     if(cmd == config.prefix + "about") {
         // Create Embed
         let menu = new Discord.MessageEmbed()
