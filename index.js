@@ -7,7 +7,9 @@ let queueMsg = null;
 let everyoneMsg = null;
 let roomCode = "";
 let queueAuthor = null;
-// let queueList = [];
+
+// Queue Stuff
+// let queueList = new Map();
 
 // Create queue role in server
 createQueueRole = (guild) => {
@@ -65,6 +67,8 @@ createMenu = () => {
 client.on("ready", () => {
     console.log(`Among Us Bot is running in ${client.guilds.cache.size} servers`);
     client.user.setActivity(config.prefix + "help", {type: 'PLAYING'});
+    // client.user.setPresence({ activity: { name: 'UNDER CONSTRUCTION' }, status: 'dnd' })
+    //     .catch(console.error);
 });
 
 // On Joining a server
@@ -198,6 +202,7 @@ client.on("message", message => {
         let menu = new Discord.MessageEmbed()
         .setColor("#FF0000")
         .setTitle("Command Menu")
+        .setDescription("*Check pinned messages if you are trying to leave the queue*")
         .attachFiles(['./static/icon.png'])
         .setThumbnail('attachment://icon.png')
         .addFields(
